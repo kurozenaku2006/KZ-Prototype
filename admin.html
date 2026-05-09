@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>KUROZENAKU ADMIN</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+
+    body{
+      font-family:'Inter',sans-serif;
+      background:
+      radial-gradient(circle at top,#0f172a 0%,#020617 50%,#000000 100%);
+      color:white;
+      overflow-x:hidden;
+    }
+
+    .logo-font{
+      font-family:'Orbitron',sans-serif;
+      letter-spacing:.12em;
+    }
+
+    .glass{
+      background:rgba(255,255,255,.05);
+      backdrop-filter:blur(18px);
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .drawer{
+      transition:all .3s ease;
+    }
+
+    .glow{
+      box-shadow:
+      0 0 15px rgba(34,211,238,.25),
+      0 0 35px rgba(16,185,129,.15);
+    }
+
+    .card-hover{
+      transition:.25s ease;
+    }
+
+    .card-hover:hover{
+      transform:translateY(-6px);
+      box-shadow:
+      0 0 20px rgba(34,211,238,.2),
+      0 0 40px rgba(16,185,129,.15);
+    }
+
+    .tab-active{
+      background:linear-gradient(to right,#06b6d4,#10b981);
+      color:white;
+      box-shadow:0 0 20px rgba(16,185,129,.5);
+    }
+
+    input,
+    select,
+    textarea{
+      outline:none;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+<div
+  x-data="adminApp()"
+  x-init="init()"
+  class="max-w-7xl mx-auto p-4 md:p-6">
+
+  <!-- HEADER -->
+
+  <div class="glass rounded-3xl p-5 flex justify-between items-center mb-6 glow">
+
+    <div>
+
+      <h1 class="logo-font text-3xl md:text-4xl font-black bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">
+        KZ ADMIN 
+      </h1>
+
+      <p class="text-gray-400 text-sm mt-1">
+          ADMIN DASHBOARD 
+      </p>
+
+    </div>
+
+    <button
+      @click="drawerOpen=true"
+      class="glass px-5 py-3 rounded-2xl hover:bg-white/10 transition-all duration-300 hover:scale-[1.03] active:scale-95">
+
+      ☰ Menu
+
+    </button>
+
+  </div>
+
+  <!-- DRAWER OVERLAY -->
+
+  <div
+    x-show="drawerOpen"
+    x-transition.opacity
+    class="fixed inset-0 bg-black/70 z-40"
+    @click="drawerOpen=false">
+  </div>
+
+  <!-- DRAWER -->
+
+  <div
+    x-show="drawerOpen"
+    x-transition
+    class="drawer fixed top-0 right-0 h-full w-80 glass z-50 p-6 border-l border-white/10 overflow-y-auto">
+
+    <div class="flex justify-between items-center mb-6">
+
+      <h2 class="text-2xl font-bold">
+        Dashboard
+      </h2>
+
+      <button
+        @click="drawerOpen=false"
+        class="glass px-3 py-2 rounded-xl hover:bg-white/10">
+
+        ✕
+
+      </button>
+
+    </div>
+
+    <div class="space-y-3">
+
+      <button
+        @click="section='kits'; drawerOpen=false"
+        class="w-full glass p-4 rounded-2xl text-left hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] active:scale-95">
+
+        📦 Manage Kits
+
+      </button>
+
+      <button
+        @click="section='claims'; drawerOpen=false"
+        class="w-full glass p-4 rounded-2xl text-left hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] active:scale-95">
+
+        ✅ Manage Claims
+
+      </button>
+
+      <button
+        @click="section='bin'; drawerOpen=false"
+        class="w-full glass p-4 rounded-2xl text-left hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] active:scale-95">
+
+        🗑 Claim Bin
+
+      </button>
+
+      <button
+        @click="section='analysis'; drawerOpen=false"
+        class="w-full glass p-4 rounded-2xl text-left hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] active:scale-95">
+
+        📊 Analysis
+
+      </button>
+
+      <button
+        onclick="window.location.href='index.html'"
+        class="w-full glass p-4 rounded-2xl text-left hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] active:scale-95">
+
+        🏠 Storefront
+
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- STATS -->
+
+  <div class="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+
+    <div class="glass rounded-3xl p-5 glow">
+      <p class="text-gray-400 text-sm">TOTAL CLAIMS</p>
+      <h2 class="text-3xl font-black mt-2" x-text="claims.length"></h2>
+    </div>
+
+    <div class="glass rounded-3xl p-5 glow">
+      <p class="text-gray-400 text-sm">PENDING</p>
+      <h2 class="text-3xl font-black mt-2 text-yellow-300" x-text="pendingClaims().length"></h2>
+    </div>
+
+    <div class="glass rounded-3xl p-5 glow">
+      <p class="text-gray-400 text-sm">APPROVED</p>
+      <h2 class="text-3xl font-black mt-2 text-emerald-300" x-text="approvedClaims().length"></h2>
+    </div>
+
+    <div class="glass rounded-3xl p-5 glow">
+      <p class="text-gray-400 text-sm">REJECTED</p>
+      <h2 class="text-3xl font-black mt-2 text-red-300" x-text="rejectedClaims().length"></h2>
+    </div>
+
+    <div class="glass rounded-3xl p-5 glow">
+      <p class="text-gray-400 text-sm">REVENUE</p>
+      <h2 class="text-2xl font-black mt-2 text-cyan-300">
+        ₹<span x-text="revenue()"></span>
+      </h2>
+    </div>
+
+    <div class="glass rounded-3xl p-5 glow">
+      <p class="text-gray-400 text-sm">LOW STOCK</p>
+      <h2 class="text-3xl font-black mt-2 text-orange-300" x-text="lowStockCount()"></h2>
+    </div>
+
+  </div>
+
+  <!-- MANAGE KITS -->
+
+  <div x-show="section==='kits'">
+
+    <div class="flex justify-between items-center mb-6">
+
+      <h2 class="text-3xl font-black">
+        📦 Manage Kits
+      </h2>
+
+      <button
+        @click="showAddKit=true"
+        class="bg-gradient-to-r from-cyan-500 to-emerald-500 px-5 py-3 rounded-2xl font-bold hover:brightness-125 transition-all duration-300 hover:scale-[1.03] active:scale-95 shadow-[0_0_20px_rgba(34,211,238,.35)]">
+
+        + Add Kit
+
+      </button>
+
+    </div>
+
+    <!-- ADD KIT -->
+
+    <div x-show="showAddKit" class="glass rounded-3xl p-5 mb-6 glow">
+
+      <div class="grid md:grid-cols-2 gap-4">
+
+        <input
+          x-model="newKit.name"
+          placeholder="Kit Name"
+          class="glass rounded-2xl p-4 bg-transparent">
+
+        <input
+          x-model="newKit.price"
+          placeholder="Price"
+          type="number"
+          class="glass rounded-2xl p-4 bg-transparent">
+
+        <input
+          x-model="newKit.stock"
+          placeholder="Stock"
+          type="number"
+          class="glass rounded-2xl p-4 bg-transparent">
+
+        <select
+          x-model="newKit.category"
+          class="glass rounded-2xl p-4 bg-[#08111f]">
+
+          <option>HG</option>
+          <option>MG</option>
+          <option>RG</option>
+          <option>PG</option>
+          <option>SD</option>
+
+        </select>
+
+        <input
+          x-model="newKit.image"
+          placeholder="Image URL"
+          class="glass rounded-2xl p-4 bg-transparent md:col-span-2">
+
+      </div>
+
+      <div class="flex gap-3 mt-5">
+
+        <button
+          @click="addKit()"
+          class="bg-gradient-to-r from-cyan-500 to-emerald-500 px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-[1.03] active:scale-95">
+
+          SAVE KIT
+
+        </button>
+
+        <button
+          @click="showAddKit=false"
+          class="glass px-6 py-3 rounded-2xl hover:bg-white/10 transition-all duration-300 hover:scale-[1.03] active:scale-95">
+
+          CANCEL
+
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- EDIT KIT -->
+
+    <div x-show="showEditKit" class="glass rounded-3xl p-5 mb-6 glow">
+
+      <h2 class="text-2xl font-bold mb-4">
+        ✏ Edit Kit
+      </h2>
+
+      <div class="grid md:grid-cols-2 gap-4">
+
+        <input
+          x-model="editKit.name"
+          placeholder="Kit Name"
+          class="glass rounded-2xl p-4 bg-transparent">
+
+        <input
+          x-model="editKit.price"
+          placeholder="Price"
+          type="number"
+          class="glass rounded-2xl p-4 bg-transparent">
+
+        <input
+          x-model="editKit.stock"
+          placeholder="Stock"
+          type="number"
+          class="glass rounded-2xl p-4 bg-transparent">
+
+        <select
+          x-model="editKit.category"
+          class="glass rounded-2xl p-4 bg-[#08111f]">
+
+          <option>HG</option>
+          <option>MG</option>
+          <option>RG</option>
+          <option>PG</option>
+          <option>SD</option>
+
+        </select>
+
+        <input
+          x-model="editKit.image"
+          placeholder="Image URL"
+          class="glass rounded-2xl p-4 bg-transparent md:col-span-2">
+
+      </div>
+
+      <div class="flex gap-3 mt-5">
+
+        <button
+          @click="updateKit()"
+          class="bg-gradient-to-r from-cyan-500 to-emerald-500 px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-[1.03] active:scale-95">
+
+          UPDATE KIT
+
+        </button>
+
+        <button
+          @click="showEditKit=false"
+          class="glass px-6 py-3 rounded-2xl hover:bg-white/10 transition-all duration-300 hover:scale-[1.03] active:scale-95">
+
+          CANCEL
+
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- PRODUCT CARDS -->
+
+    <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+
+      <template x-for="product in products" :key="product.id">
+
+        <div class="glass rounded-3xl p-5 glow card-hover">
+
+          <img
+            :src="product.image"
+            class="h-48 w-full object-contain mb-4">
+
+          <h2 class="text-xl font-bold" x-text="product.name"></h2>
+
+          <p class="text-cyan-300 text-2xl font-black mt-2">
+            ₹<span x-text="product.price"></span>
+          </p>
+
+          <div class="text-gray-400 mt-2">
+            Stock:
+            <span x-text="product.stock"></span>
+          </div>
+
+          <div class="flex gap-2 mt-4">
+
+           <button
+  @click="openEditKit(product)"
+  class="flex-1 bg-gradient-to-r from-cyan-500 to-emerald-500 px-4 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-[1.03] hover:brightness-125 active:scale-95 cursor-pointer shadow-[0_0_20px_rgba(34,211,238,.25)] hover:shadow-[0_0_30px_rgba(16,185,129,.35)]">
+
+  ✏ EDIT
+
+</button>
+
+<button
+  @click="deleteKit(product.id)"
+  class="flex-1 bg-gradient-to-r from-red-500 to-pink-500 px-4 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-[1.03] hover:brightness-125 active:scale-95 cursor-pointer shadow-[0_0_20px_rgba(239,68,68,.25)] hover:shadow-[0_0_30px_rgba(236,72,153,.35)]">
+
+  DELETE
+
+</button>
+          </div>
+
+        </div>
+
+      </template>
+
+    </div>
+
+  </div>
+
+  <!-- CLAIMS -->
+
+  <div x-show="section==='claims'">
+
+    <h2 class="text-3xl font-black mb-6">
+      ✅ Manage Claims
+    </h2>
+
+    <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+
+      <template x-for="claim in claims" :key="claim.id">
+
+        <div class="glass rounded-3xl p-5 glow card-hover">
+
+          <div class="flex justify-between items-start mb-4">
+
+            <div>
+
+              <h2 class="text-xl font-bold" x-text="claim.productName"></h2>
+
+              <p class="text-cyan-300 font-black text-2xl mt-2">
+                ₹<span x-text="claim.price"></span>
+              </p>
+
+            </div>
+
+            <div
+              class="px-3 py-1 rounded-xl text-sm font-bold"
+              :class="{
+                'bg-yellow-500/20 text-yellow-300': claim.status==='pending',
+                'bg-emerald-500/20 text-emerald-300': claim.status==='approved',
+                'bg-red-500/20 text-red-300': claim.status==='rejected'
+              }">
+
+              <span x-text="claim.status.toUpperCase()"></span>
+
+            </div>
+
+          </div>
+
+          <div class="space-y-2 text-sm text-gray-300">
+
+            <p>
+              👤 <span x-text="claim.customerName"></span>
+            </p>
+
+            <p>
+              📞 <span x-text="claim.phone || 'N/A'"></span>
+            </p>
+
+            <p>
+              📧 <span x-text="claim.contact || 'N/A'"></span>
+            </p>
+
+            <p>
+              📍 <span x-text="claim.address"></span>
+            </p>
+
+          </div>
+
+          <!-- ACTION BUTTONS -->
+
+          <div class="flex flex-wrap gap-2 mt-5">
+
+            <!-- PENDING -->
+
+            <template x-if="claim.status === 'pending'">
+
+              <div class="flex gap-2 w-full">
+
+               <button
+  @click="updateClaimStatus(claim,'approved')"
+  class="flex-1 bg-gradient-to-r from-cyan-500 to-emerald-500 px-4 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-[1.03] hover:brightness-125 active:scale-95 cursor-pointer shadow-[0_0_20px_rgba(34,211,238,.25)] hover:shadow-[0_0_30px_rgba(16,185,129,.35)]">
+
+  APPROVE
+
+</button>
+
+<button
+  @click="updateClaimStatus(claim,'rejected')"
+  class="flex-1 bg-gradient-to-r from-red-500 to-pink-500 px-4 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-[1.03] hover:brightness-125 active:scale-95 cursor-pointer shadow-[0_0_20px_rgba(239,68,68,.25)] hover:shadow-[0_0_30px_rgba(236,72,153,.35)]">
+
+  REJECT
+
+</button>
+              </div>
+
+            </template>
+
+            <!-- APPROVED -->
+
+            <template x-if="claim.status === 'approved'">
+
+             <button
+  @click="updateClaimStatus(claim,'pending')"
+  class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 px-4 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-[1.03] hover:brightness-125 active:scale-95 cursor-pointer shadow-[0_0_20px_rgba(234,179,8,.25)] hover:shadow-[0_0_30px_rgba(249,115,22,.35)]">
+
+  REVERT TO PENDING
+
+</button>
+
+            </template>
+
+            <!-- REJECTED -->
+
+            <template x-if="claim.status === 'rejected'">
+
+              <div class="flex gap-2 w-full">
+
+              <button
+  @click="updateClaimStatus(claim,'pending')"
+  class="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 px-4 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-[1.03] hover:brightness-125 active:scale-95 cursor-pointer shadow-[0_0_20px_rgba(234,179,8,.25)] hover:shadow-[0_0_30px_rgba(249,115,22,.35)]">
+
+  REVERT
+
+</button>
+
+<button
+  @click="moveClaimToBin(claim)"
+  class="flex-1 bg-gradient-to-r from-red-500 to-pink-500 px-4 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-[1.03] hover:brightness-125 active:scale-95 cursor-pointer shadow-[0_0_20px_rgba(239,68,68,.25)] hover:shadow-[0_0_30px_rgba(236,72,153,.35)]">
+
+  DELETE
+
+</button>
+              </div>
+
+            </template>
+
+          </div>
+
+        </div>
+
+      </template>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+function adminApp(){
+
+  return {
+
+    drawerOpen:false,
+    section:'kits',
+
+    claims:[],
+    products:[],
+    claimBin:[],
+
+    processingClaims:{},
+
+    db:null,
+
+    showAddKit:false,
+    showEditKit:false,
+
+    newKit:{
+      name:'',
+      price:'',
+      stock:'',
+      category:'HG',
+      image:''
+    },
+
+    editKit:{
+      id:'',
+      name:'',
+      price:'',
+      stock:'',
+      category:'HG',
+      image:''
+    },
+
+    init(){
+
+      const firebaseConfig = {
+
+        apiKey:'AIzaSyByLURDPjEbLepc3Wz3O1MAYYLXSeu04Zg',
+        authDomain:'kurozenaku-gundam-store.firebaseapp.com',
+        projectId:'kurozenaku-gundam-store'
+
+      };
+
+      if(!firebase.apps.length){
+        firebase.initializeApp(firebaseConfig);
+      }
+
+      this.db = firebase.firestore();
+
+      this.db
+      .collection('products')
+      .onSnapshot(snapshot => {
+
+        this.products =
+        snapshot.docs.map(doc => ({
+          id:doc.id,
+          ...doc.data()
+        }));
+
+      });
+
+      this.db
+      .collection('claims')
+      .orderBy('createdAt','desc')
+      .onSnapshot(snapshot => {
+
+        this.claims =
+        snapshot.docs.map(doc => ({
+          id:doc.id,
+          ...doc.data()
+        }));
+
+      });
+
+      this.db
+      .collection('claimBin')
+      .orderBy('deletedAt','desc')
+      .onSnapshot(snapshot => {
+
+        this.claimBin =
+        snapshot.docs.map(doc => ({
+          id:doc.id,
+          ...doc.data()
+        }));
+
+      });
+
+    },
+
+    pendingClaims(){
+      return this.claims.filter(c => c.status === 'pending');
+    },
+
+    approvedClaims(){
+      return this.claims.filter(c => c.status === 'approved');
+    },
+
+    rejectedClaims(){
+      return this.claims.filter(c => c.status === 'rejected');
+    },
+
+    revenue(){
+
+      return this.approvedClaims()
+      .reduce((sum,c)=>
+        sum + Number(c.price || 0)
+      ,0);
+
+    },
+
+    lowStockCount(){
+
+      return this.products.filter(
+        p => Number(p.stock || 0) <= 1
+      ).length;
+
+    },
+
+    async addKit(){
+
+      try{
+
+        await this.db
+        .collection('products')
+        .add({
+
+          name:this.newKit.name,
+          price:Number(this.newKit.price),
+          stock:Number(this.newKit.stock || 0),
+          category:this.newKit.category,
+          image:this.newKit.image,
+
+          createdAt:
+          firebase.firestore.FieldValue.serverTimestamp(),
+
+          updatedAt:
+          firebase.firestore.FieldValue.serverTimestamp()
+
+        });
+
+        this.newKit = {
+          name:'',
+          price:'',
+          stock:'',
+          category:'HG',
+          image:''
+        };
+
+        this.showAddKit = false;
+
+      }
+
+      catch(error){
+
+        console.error(error);
+        alert('Failed to add kit');
+
+      }
+
+    },
+
+    openEditKit(product){
+
+      this.editKit = {
+        ...product
+      };
+
+      this.showEditKit = true;
+
+    },
+
+    async updateKit(){
+
+      try{
+
+        await this.db
+        .collection('products')
+        .doc(this.editKit.id)
+        .update({
+
+          name:this.editKit.name,
+          price:Number(this.editKit.price),
+          stock:Number(this.editKit.stock),
+          category:this.editKit.category,
+          image:this.editKit.image,
+
+          updatedAt:
+          firebase.firestore.FieldValue.serverTimestamp()
+
+        });
+
+        this.showEditKit = false;
+
+      }
+
+      catch(error){
+
+        console.error(error);
+        alert('Failed to update kit');
+
+      }
+
+    },
+
+    async deleteKit(id){
+
+      try{
+
+        const confirmDelete =
+        confirm('Delete this kit permanently?');
+
+        if(!confirmDelete){
+          return;
+        }
+
+        await this.db
+        .collection('products')
+        .doc(id)
+        .delete();
+
+      }
+
+      catch(error){
+
+        console.error(error);
+        alert('Failed to delete kit');
+
+      }
+
+    },
+
+    async updateClaimStatus(claim,newStatus){
+
+      if(this.processingClaims[claim.id]){
+        return;
+      }
+
+      this.processingClaims[claim.id] = true;
+
+      try{
+
+        await this.db.runTransaction(async transaction => {
+
+          const claimRef =
+          this.db.collection('claims').doc(claim.id);
+
+          const claimDoc =
+          await transaction.get(claimRef);
+
+          if(!claimDoc.exists){
+            throw new Error('Claim not found');
+          }
+
+          const claimData = claimDoc.data();
+
+          const oldStatus =
+          claimData.status || 'pending';
+
+          if(oldStatus === newStatus){
+            return;
+          }
+
+          const productRef =
+          this.db.collection('products')
+          .doc(claimData.productId);
+
+          const productDoc =
+          await transaction.get(productRef);
+
+          const productData =
+          productDoc.data();
+
+          let stock =
+          Number(productData.stock || 0);
+
+          if(
+            oldStatus !== 'approved'
+            &&
+            newStatus === 'approved'
+          ){
+
+            if(stock <= 0){
+              throw new Error('Out of stock');
+            }
+
+            stock -= 1;
+
+          }
+
+          if(
+            oldStatus === 'approved'
+            &&
+            newStatus !== 'approved'
+          ){
+
+            stock += 1;
+
+          }
+
+          transaction.update(productRef,{
+            stock,
+            updatedAt:
+            firebase.firestore.FieldValue.serverTimestamp()
+          });
+
+          transaction.update(claimRef,{
+            status:newStatus,
+            updatedAt:
+            firebase.firestore.FieldValue.serverTimestamp()
+          });
+
+        });
+
+      }
+
+      catch(error){
+
+        console.error(error);
+        alert(error.message);
+
+      }
+
+      finally{
+
+        delete this.processingClaims[claim.id];
+
+      }
+
+    },
+
+    async moveClaimToBin(claim){
+
+      if(this.processingClaims[claim.id]){
+        return;
+      }
+
+      const confirmDelete =
+      confirm('Move claim to bin?');
+
+      if(!confirmDelete){
+        return;
+      }
+
+      this.processingClaims[claim.id] = true;
+
+      try{
+
+        await this.db.runTransaction(async transaction => {
+
+          const claimRef =
+          this.db.collection('claims')
+          .doc(claim.id);
+
+          const claimDoc =
+          await transaction.get(claimRef);
+
+          if(!claimDoc.exists){
+            throw new Error('Claim already deleted');
+          }
+
+          const claimData =
+          claimDoc.data();
+
+          if(claimData.status === 'approved'){
+
+            const productRef =
+            this.db.collection('products')
+            .doc(claimData.productId);
+
+            const productDoc =
+            await transaction.get(productRef);
+
+            if(productDoc.exists){
+
+              const stock =
+              Number(productDoc.data().stock || 0);
+
+              transaction.update(productRef,{
+                stock:stock + 1
+              });
+
+            }
+
+          }
+
+          const binRef =
+          this.db.collection('claimBin')
+          .doc();
+
+          transaction.set(binRef,{
+
+            ...claimData,
+
+            originalClaimId:claim.id,
+
+            deletedAt:
+            firebase.firestore.FieldValue.serverTimestamp()
+
+          });
+
+          transaction.delete(claimRef);
+
+        });
+
+      }
+
+      catch(error){
+
+        console.error(error);
+        alert(error.message || 'Delete failed');
+
+      }
+
+      finally{
+
+        delete this.processingClaims[claim.id];
+
+      }
+
+    }
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>

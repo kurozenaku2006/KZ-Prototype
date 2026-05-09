@@ -234,6 +234,51 @@
       <h2 class="text-3xl font-black">
         📦 Manage Kits
       </h2>
+      <!-- CLAIM FILTER TABS -->
+
+<div class="flex flex-wrap gap-3 mb-6">
+
+  <button
+    @click="claimFilter='all'"
+    :class="claimFilter==='all' ? 'tab-active' : 'glass'"
+    class="px-5 py-3 rounded-2xl font-bold transition-all duration-300">
+
+    ALL
+    (<span x-text="claims.length"></span>)
+
+  </button>
+
+  <button
+    @click="claimFilter='pending'"
+    :class="claimFilter==='pending' ? 'tab-active' : 'glass'"
+    class="px-5 py-3 rounded-2xl font-bold transition-all duration-300">
+
+    PENDING
+    (<span x-text="pendingClaims().length"></span>)
+
+  </button>
+
+  <button
+    @click="claimFilter='approved'"
+    :class="claimFilter==='approved' ? 'tab-active' : 'glass'"
+    class="px-5 py-3 rounded-2xl font-bold transition-all duration-300">
+
+    APPROVED
+    (<span x-text="approvedClaims().length"></span>)
+
+  </button>
+
+  <button
+    @click="claimFilter='rejected'"
+    :class="claimFilter==='rejected' ? 'tab-active' : 'glass'"
+    class="px-5 py-3 rounded-2xl font-bold transition-all duration-300">
+
+    REJECTED
+    (<span x-text="rejectedClaims().length"></span>)
+
+  </button>
+
+</div>
 
       <button
         @click="showAddKit=true"
@@ -437,7 +482,7 @@
 
     <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
 
-      <template x-for="claim in claims" :key="claim.id">
+      <template x-for="claim in filteredClaims()" :key="claim.id">
 
         <div class="glass rounded-3xl p-5 glow card-hover">
 
@@ -659,11 +704,30 @@
 <script>
 
 function adminApp(){
+  
+  filteredClaims(){
+
+  if(this.claimFilter === 'pending'){
+    return this.pendingClaims();
+  }
+
+  if(this.claimFilter === 'approved'){
+    return this.approvedClaims();
+  }
+
+  if(this.claimFilter === 'rejected'){
+    return this.rejectedClaims();
+  }
+
+  return this.claims;
+
+},
 
   return {
 
     drawerOpen:false,
     section:'kits',
+    claimFilter:'all',
 
     claims:[],
     products:[],

@@ -567,6 +567,95 @@
 
 </div>
 
+  <!-- CLAIM BIN -->
+
+<div x-show="section==='bin'">
+
+  <div class="flex justify-between items-center mb-6">
+
+    <h2 class="text-3xl font-black">
+      🗑 Claim Bin
+    </h2>
+
+    <div class="text-gray-400 text-sm">
+      Deleted Claims:
+      <span x-text="claimBin.length"></span>
+    </div>
+
+  </div>
+
+  <div
+    x-show="claimBin.length === 0"
+    class="glass rounded-3xl p-8 text-center text-gray-400">
+
+    No deleted claims
+
+  </div>
+
+  <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+
+    <template x-for="claim in claimBin" :key="claim.id">
+
+      <div class="glass rounded-3xl p-5 glow card-hover opacity-80">
+
+        <div class="flex justify-between items-start mb-4">
+
+          <div>
+
+            <h2
+              class="text-xl font-bold"
+              x-text="claim.productName">
+            </h2>
+
+            <p class="text-cyan-300 font-black text-2xl mt-2">
+              ₹<span x-text="claim.price"></span>
+            </p>
+
+          </div>
+
+          <div class="px-3 py-1 rounded-xl text-sm font-bold bg-red-500/20 text-red-300">
+
+            DELETED
+
+          </div>
+
+        </div>
+
+        <div class="space-y-2 text-sm text-gray-300">
+
+          <p>
+            👤
+            <span x-text="claim.customerName"></span>
+          </p>
+
+          <p>
+            📧
+            <span x-text="claim.contact || 'N/A'"></span>
+          </p>
+
+          <p>
+            📍
+            <span x-text="claim.address"></span>
+          </p>
+
+          <p>
+            📌 Status Before Delete:
+            <span
+              class="font-bold"
+              x-text="claim.status">
+            </span>
+          </p>
+
+        </div>
+
+      </div>
+
+    </template>
+
+  </div>
+
+</div>
+
 <script>
 
 function adminApp(){

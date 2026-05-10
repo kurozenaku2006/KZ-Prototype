@@ -73,6 +73,24 @@
       outline:none;
     }
 
+    .toast-enter{
+  animation:toastIn .35s ease;
+}
+
+@keyframes toastIn{
+
+  from{
+    opacity:0;
+    transform:translateY(20px) scale(.95);
+  }
+
+  to{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+
+}
+
   </style>
 
 </head>
@@ -537,7 +555,7 @@
 
     <!-- CLAIM SEARCH -->
 
-<div class="w-full lg:max-w-md">
+<div class="w-full lg:max-w-md mb-6">
   
   <input
     x-model="claimSearch"
@@ -910,6 +928,53 @@
 
 </div>
 
+  <!-- TOASTS -->
+
+<div class="fixed top-5 right-5 z-[9999] space-y-3 w-[320px]">
+
+  <template x-for="toast in toasts" :key="toast.id">
+
+    <div
+      class="toast-enter rounded-2xl p-4 shadow-2xl border backdrop-blur-xl"
+      :class="{
+        'bg-emerald-500/20 border-emerald-400 text-emerald-200': toast.type==='success',
+        'bg-red-500/20 border-red-400 text-red-200': toast.type==='error',
+        'bg-yellow-500/20 border-yellow-400 text-yellow-200': toast.type==='warning',
+        'bg-cyan-500/20 border-cyan-400 text-cyan-200': toast.type==='info'
+      }">
+
+      <div class="flex items-start justify-between gap-3">
+
+        <div>
+
+          <p
+            class="font-bold text-sm uppercase tracking-wider"
+            x-text="toast.title">
+          </p>
+
+          <p
+            class="text-sm mt-1 opacity-90"
+            x-text="toast.message">
+          </p>
+
+        </div>
+
+        <button
+          @click="removeToast(toast.id)"
+          class="opacity-60 hover:opacity-100">
+
+          ✕
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </template>
+
+</div>
+  
 <script>
 
 function adminApp(){
@@ -926,6 +991,7 @@ function adminApp(){
     claims:[],
     products:[],
     claimBin:[],
+    toasts:[],
 
     processingClaims:{},
 
@@ -971,6 +1037,18 @@ auth.onAuthStateChanged(user => {
 
   if(!user){
     window.location.href = 'login.html';
+    return;
+  }
+
+  const adminEmails = [
+    'vedantbhalge2006@email.com'
+  ];
+
+  if(!adminEmails.includes(user.email)){
+    alert('Access denied');
+    firebase.auth().signOut();
+    window.location.href = 'login.html';
+    return;
   }
 
 });
@@ -1065,7 +1143,7 @@ auth.onAuthStateChanged(user => {
     
    filteredProducts(){
 
-  if(!this.productSearch){
+  if(!this.productSearch.trim()){
     return this.products;
   }
 
@@ -1114,57 +1192,84 @@ auth.onAuthStateChanged(user => {
 
     },
     
-  async addKit(){
+async addKit(){
 
-  try{
+try{
 
-    if(
-      this.newKit.image &&
-      !this.newKit.image.startsWith('http')
-    ){
-      alert('Enter valid image URL');
-      return;
-    }
+if(
+  !this.newKit.name ||
+  !this.newKit.price
+){
+  this.showToast(
+    'warning',
+    'MISSING INFO',
+    'Name and price required'
+  );
+  return;
+}
 
-    await this.db
-    .collection('products')
-    .add({
+if(
+  this.newKit.image &&
+  !this.newKit.image.startsWith('http')
+){
+  this.showToast(
+    'warning',
+    'INVALID IMAGE',
+    'Enter valid image URL'
+  );
+  return;
+}
 
-      name:this.newKit.name,
-      price:Number(this.newKit.price),
-      stock:Number(this.newKit.stock || 0),
-      category:this.newKit.category,
+await this.db
+.collection('products')
+.add({
 
-      image:
-      this.newKit.image ||
-      'https://placehold.co/600x600/111827/ffffff?text=NO+IMAGE',
+  name:this.newKit.name,
+  price:Number(this.newKit.price),
+  stock:Number(this.newKit.stock || 0),
+  category:this.newKit.category,
 
-      createdAt:
-      firebase.firestore.FieldValue.serverTimestamp(),
+  image:
+  this.newKit.image ||
+  'https://placehold.co/600x600/111827/ffffff?text=NO+IMAGE',
 
-      updatedAt:
-      firebase.firestore.FieldValue.serverTimestamp()
+  createdAt:
+  firebase.firestore.FieldValue.serverTimestamp(),
 
-    });
+  updatedAt:
+  firebase.firestore.FieldValue.serverTimestamp()
 
-    this.newKit = {
-      name:'',
-      price:'',
-      stock:'',
-      category:'HG',
-      image:''
-    };
+});
 
-    this.showAddKit = false;
+this.newKit = {
+  name:'',
+  price:'',
+  stock:'',
+  category:'HG',
+  image:''
+};
 
-  }
+this.showAddKit = false;
 
-  catch(error){
+this.showToast(
+  'success',
+  'KIT ADDED',
+  'New kit added successfully'
+);
 
-    console.error(error);
-    alert('Failed to add kit');
+}
 
-  }
+catch(error){
+
+console.error(error);
+
+this.showToast(
+  'error',
+  'ADD FAILED',
+  'Failed to add kit'
+);
+
+}
 
 },
 
@@ -1178,78 +1283,116 @@ auth.onAuthStateChanged(user => {
 
     },
 
-    async updateKit(){
+   async updateKit(){
+
+try{
+
+if(
+  !this.editKit.name ||
+  !this.editKit.price
+){
+  this.showToast(
+    'warning',
+    'MISSING INFO',
+    'Name and price required'
+  );
+  return;
+}
+
+if(
+  this.editKit.image &&
+  !this.editKit.image.startsWith('http')
+){
+  this.showToast(
+    'warning',
+    'INVALID IMAGE',
+    'Enter valid image URL'
+  );
+  return;
+}
+
+await this.db
+.collection('products')
+.doc(this.editKit.id)
+.update({
+
+  name:this.editKit.name,
+  price:Number(this.editKit.price),
+  stock:Number(this.editKit.stock),
+  category:this.editKit.category,
+
+  image:
+  this.editKit.image ||
+  'https://placehold.co/600x600/111827/ffffff?text=NO+IMAGE',
+
+  updatedAt:
+  firebase.firestore.FieldValue.serverTimestamp()
+
+});
+
+this.showEditKit = false;
+
+this.showToast(
+  'success',
+  'KIT UPDATED',
+  'Kit updated successfully'
+);
+
+}
+
+catch(error){
+
+console.error(error);
+
+this.showToast(
+  'error',
+  'UPDATE FAILED',
+  'Failed to update kit'
+);
+
+}
+
+},
+
+ async deleteKit(id){
 
   try{
 
-    if(
-      this.editKit.image &&
-      !this.editKit.image.startsWith('http')
-    ){
-      alert('Enter valid image URL');
+    const confirmDelete =
+    confirm('Delete this kit permanently?');
+
+    if(!confirmDelete){
       return;
     }
 
     await this.db
     .collection('products')
-    .doc(this.editKit.id)
-    .update({
+    .doc(id)
+    .delete();
 
-      name:this.editKit.name,
-      price:Number(this.editKit.price),
-      stock:Number(this.editKit.stock),
-      category:this.editKit.category,
-
-      image:
-      this.editKit.image ||
-      'https://placehold.co/600x600/111827/ffffff?text=NO+IMAGE',
-
-      updatedAt:
-      firebase.firestore.FieldValue.serverTimestamp()
-
-    });
-
-    this.showEditKit = false;
+    this.showToast(
+      'warning',
+      'KIT DELETED',
+      'Kit removed permanently'
+    );
 
   }
 
   catch(error){
 
     console.error(error);
-    alert('Failed to update kit');
+
+    this.showToast(
+      'error',
+      'DELETE FAILED',
+      'Failed to delete kit'
+    );
 
   }
 
 },
 
-    async deleteKit(id){
-
-      try{
-
-        const confirmDelete =
-        confirm('Delete this kit permanently?');
-
-        if(!confirmDelete){
-          return;
-        }
-
-        await this.db
-        .collection('products')
-        .doc(id)
-        .delete();
-
-      }
-
-      catch(error){
-
-        console.error(error);
-        alert('Failed to delete kit');
-
-      }
-
-    },
-
-    async quickRestock(product,amount){
+  async quickRestock(product,amount){
 
   try{
 
@@ -1258,19 +1401,30 @@ auth.onAuthStateChanged(user => {
     .doc(product.id)
     .update({
 
-      stock:Number(product.stock || 0) + amount,
+      stock:(Number(product.stock) || 0) + amount,
 
       updatedAt:
       firebase.firestore.FieldValue.serverTimestamp()
 
     });
 
+    this.showToast(
+      'success',
+      'STOCK UPDATED',
+      `${product.name} stock increased by ${amount}`
+    );
+
   }
 
   catch(error){
 
     console.error(error);
-    alert('Failed to restock');
+
+    this.showToast(
+      'error',
+      'RESTOCK FAILED',
+      'Failed to update stock'
+    );
 
   }
 
@@ -1314,16 +1468,25 @@ auth.onAuthStateChanged(user => {
             return;
           }
 
-          const productRef =
-          this.db.collection('products')
-          .doc(claimData.productId);
+
+          if(!claimData.productId){
+  throw new Error('Missing product ID');
+}
+
+const productRef =
+this.db.collection('products')
+.doc(claimData.productId);
 
           const productDoc =
           await transaction.get(productRef);
 
-          const productData =
-          productDoc.data();
+         if(!productDoc.exists){
+  throw new Error('Product not found');
+}
 
+const productData =
+productDoc.data();
+          
           let stock =
           Number(productData.stock || 0);
 
@@ -1365,13 +1528,29 @@ auth.onAuthStateChanged(user => {
 
         });
 
+         this.showToast(
+  newStatus === 'approved'
+    ? 'success'
+    : newStatus === 'rejected'
+    ? 'warning'
+    : 'info',
+
+  `CLAIM ${newStatus.toUpperCase()}`,
+
+  `${claim.customerName}'s claim updated`
+);
+
       }
 
-      catch(error){
+             catch(error){
 
         console.error(error);
-        alert(error.message);
-
+this.showToast(
+  'error',
+  'ACTION FAILED',
+  error.message
+);
+        
       }
 
       finally{
@@ -1415,29 +1594,7 @@ auth.onAuthStateChanged(user => {
           const claimData =
           claimDoc.data();
 
-          if(claimData.status === 'approved'){
-
-            const productRef =
-            this.db.collection('products')
-            .doc(claimData.productId);
-
-            const productDoc =
-            await transaction.get(productRef);
-
-            if(productDoc.exists){
-
-              const stock =
-              Number(productDoc.data().stock || 0);
-
-              transaction.update(productRef,{
-                stock:stock + 1
-              });
-
-            }
-
-          }
-
-          const binRef =
+                   const binRef =
           this.db.collection('claimBin')
           .doc();
 
@@ -1471,8 +1628,33 @@ auth.onAuthStateChanged(user => {
 
       }
 
-    }
+    },
+    
+showToast(type,title,message){
 
+  const id = Date.now();
+
+  this.toasts.push({
+    id,
+    type,
+    title,
+    message
+  });
+
+  setTimeout(() => {
+
+    this.removeToast(id);
+
+  },3500);
+
+},
+
+removeToast(id){
+
+  this.toasts =
+  this.toasts.filter(t => t.id !== id);
+
+},
   }
 
 }

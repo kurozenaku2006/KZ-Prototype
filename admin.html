@@ -392,6 +392,14 @@
 
     <!-- PRODUCT CARDS -->
 
+ <div
+  x-show="filteredProducts().length === 0"
+  class="glass rounded-3xl p-8 text-center text-gray-400 mb-6">
+
+  No kits found
+
+</div>
+    
     <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
 
 <template x-for="product in filteredProducts()" :key="product.id">
@@ -502,6 +510,14 @@
 
     </div>
 
+    <div
+  x-show="filteredClaims().length === 0"
+  class="glass rounded-3xl p-8 text-center text-gray-400 mb-6">
+
+  No claims found
+
+</div>
+    
     <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
 
       <template x-for="claim in filteredClaims()" :key="claim.id">

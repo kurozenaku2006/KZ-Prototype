@@ -166,7 +166,7 @@
         @click="section='kits'; drawerOpen=false"
         class="w-full glass p-4 rounded-2xl text-left hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] active:scale-95">
 
-        📦 Manage Kits
+        ߓ Manage Kits
 
       </button>
 
@@ -182,7 +182,7 @@
         @click="section='bin'; drawerOpen=false"
         class="w-full glass p-4 rounded-2xl text-left hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] active:scale-95">
 
-        🗑 Claim Bin
+        ߗ Claim Bin
 
       </button>
 
@@ -190,7 +190,7 @@
         @click="section='analysis'; drawerOpen=false"
         class="w-full glass p-4 rounded-2xl text-left hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] active:scale-95">
 
-        📊 Analysis
+        ߓ Analysis
 
       </button>
 
@@ -198,7 +198,7 @@
         onclick="window.location.href='index.html'"
         class="w-full glass p-4 rounded-2xl text-left hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] active:scale-95">
 
-        🏠 Storefront
+        ߏ Storefront
 
       </button>
 
@@ -206,7 +206,7 @@
   @click="logout()"
   class="w-full bg-gradient-to-r from-red-500 to-pink-500 p-4 rounded-2xl text-left font-bold">
 
-  🚪 Logout
+  ߚ Logout
 
 </button>
 
@@ -259,7 +259,7 @@
 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
   
       <h2 class="text-3xl font-black">
-        📦 Manage Kits
+        ߓ Manage Kits
       </h2>
       
       <!-- PRODUCT SEARCH -->
@@ -622,8 +622,10 @@
 
       <template x-for="claim in filteredClaims()" :key="claim.id">
 
-        <div class="glass rounded-3xl p-5 glow card-hover">
-
+<div
+  @click="openClaimModal(claim)"
+  class="glass rounded-3xl p-5 glow card-hover cursor-pointer">
+  
           <div class="flex justify-between items-start mb-4">
 
             <div>
@@ -653,19 +655,19 @@
           <div class="space-y-2 text-sm text-gray-300">
 
             <p>
-              👤 <span x-text="claim.customerName"></span>
+              ߑ <span x-text="claim.customerName"></span>
             </p>
 
             <p>
-              📞 <span x-text="claim.phone || 'N/A'"></span>
+              ߓ <span x-text="claim.phone || 'N/A'"></span>
             </p>
 
             <p>
-              📧 <span x-text="claim.contact || 'N/A'"></span>
+              ߓ <span x-text="claim.contact || 'N/A'"></span>
             </p>
 
             <p>
-              📍 <span x-text="claim.address"></span>
+              ߓ <span x-text="claim.address"></span>
             </p>
 
           </div>
@@ -769,7 +771,7 @@
     <div class="flex justify-between items-center mb-6">
 
       <h2 class="text-3xl font-black">
-        🗑 Claim Bin
+        ߗ Claim Bin
       </h2>
 
       <div class="text-gray-400 text-sm">
@@ -819,22 +821,22 @@
           <div class="space-y-2 text-sm text-gray-300">
 
             <p>
-              👤
+              ߑ
               <span x-text="claim.customerName"></span>
             </p>
 
             <p>
-              📧
+              ߓ
               <span x-text="claim.contact || 'N/A'"></span>
             </p>
 
             <p>
-              📍
+              ߓ
               <span x-text="claim.address"></span>
             </p>
 
             <p>
-              📌 Status Before Delete:
+              ߓ Status Before Delete:
               <span
                 class="font-bold"
                 x-text="claim.status">
@@ -856,7 +858,7 @@
   <div x-show="section==='analysis'">
 
     <h2 class="text-3xl font-black mb-6">
-      📊 Analysis
+      ߓ Analysis
     </h2>
 
     <div class="grid md:grid-cols-2 gap-5">
@@ -928,6 +930,189 @@
 
 </div>
 
+  <!-- CLAIM DETAILS MODAL -->
+
+<div
+  x-show="showClaimModal"
+  x-transition.opacity
+  class="fixed inset-0 bg-black/70 z-[9998] flex items-center justify-center p-4">
+
+  <div
+    @click.away="showClaimModal=false"
+    class="glass rounded-3xl w-full max-w-2xl p-6 glow max-h-[90vh] overflow-y-auto">
+
+    <!-- HEADER -->
+
+    <div class="flex justify-between items-center mb-6">
+
+      <div>
+
+        <h2 class="text-3xl font-black">
+          ߓ Claim Details
+        </h2>
+
+        <p class="text-gray-400 text-sm mt-1">
+          Full customer & order information
+        </p>
+
+      </div>
+
+      <button
+        @click="showClaimModal=false"
+        class="glass px-4 py-2 rounded-2xl hover:bg-white/10">
+
+        ✕
+
+      </button>
+
+    </div>
+
+    <!-- CONTENT -->
+
+    <template x-if="selectedClaim">
+
+      <div class="space-y-6">
+
+        <!-- PRODUCT -->
+
+        <div class="glass rounded-2xl p-5">
+
+          <h3 class="text-xl font-bold mb-4 text-cyan-300">
+            Product
+          </h3>
+
+          <div class="space-y-2">
+
+            <p>
+              <span class="text-gray-400">
+                Name:
+              </span>
+
+              <span
+                class="font-bold"
+                x-text="selectedClaim.productName">
+              </span>
+            </p>
+
+            <p>
+              <span class="text-gray-400">
+                Price:
+              </span>
+
+              ₹<span
+                class="font-bold"
+                x-text="selectedClaim.price">
+              </span>
+            </p>
+
+            <p>
+              <span class="text-gray-400">
+                Status:
+              </span>
+
+              <span
+                class="font-bold uppercase"
+                x-text="selectedClaim.status">
+              </span>
+            </p>
+
+          </div>
+
+        </div>
+
+        <!-- CUSTOMER -->
+
+        <div class="glass rounded-2xl p-5">
+
+          <h3 class="text-xl font-bold mb-4 text-emerald-300">
+            Customer
+          </h3>
+
+          <div class="space-y-2">
+
+            <p>
+              <span class="text-gray-400">
+                Name:
+              </span>
+
+              <span
+                class="font-bold"
+                x-text="selectedClaim.customerName">
+              </span>
+            </p>
+
+            <p>
+              <span class="text-gray-400">
+                Phone:
+              </span>
+
+              <span
+                class="font-bold"
+                x-text="selectedClaim.phone || 'N/A'">
+              </span>
+            </p>
+
+            <p>
+              <span class="text-gray-400">
+                Email:
+              </span>
+
+              <span
+                class="font-bold"
+                x-text="selectedClaim.contact || 'N/A'">
+              </span>
+            </p>
+
+            <p>
+              <span class="text-gray-400">
+                Address:
+              </span>
+
+              <span
+                class="font-bold"
+                x-text="selectedClaim.address">
+              </span>
+            </p>
+
+          </div>
+
+        </div>
+
+        <!-- ACTIONS -->
+
+        <div class="flex flex-wrap gap-3">
+
+          <button
+            @click="updateClaimStatus(selectedClaim,'approved')"
+            class="flex-1 bg-gradient-to-r from-cyan-500 to-emerald-500 px-5 py-4 rounded-2xl font-bold">
+
+            APPROVE
+          </button>
+
+          <button
+            @click="updateClaimStatus(selectedClaim,'rejected')"
+            class="flex-1 bg-gradient-to-r from-red-500 to-pink-500 px-5 py-4 rounded-2xl font-bold">
+
+            REJECT
+          </button>
+
+          <button
+            @click="updateClaimStatus(selectedClaim,'pending')"
+            class="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 px-5 py-4 rounded-2xl font-bold">
+
+            REVERT
+          </button>
+
+        </div>
+
+      </div>
+
+    </template>
+
+  </div>
+
+</div>
+  
   <!-- TOASTS -->
 
 <div class="fixed top-5 right-5 z-[9999] space-y-3 w-[320px]">
@@ -995,6 +1180,10 @@ function adminApp(){
 
     processingClaims:{},
 
+    showClaimModal:false,
+
+selectedClaim:null,
+    
     db:null,
 
     showAddKit:false,
@@ -1175,6 +1364,14 @@ auth.onAuthStateChanged(user => {
       return this.claims.filter(c => c.status === 'rejected');
     },
 
+    openClaimModal(claim){
+
+  this.selectedClaim = claim;
+
+  this.showClaimModal = true;
+
+},
+    
     revenue(){
 
       return this.approvedClaims()

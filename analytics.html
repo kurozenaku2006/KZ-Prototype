@@ -242,32 +242,40 @@ function analyticsApp(){
 
     },
 
-    async loadData(){
+   loadData(){
 
-      const claimsSnapshot =
-      await this.db.collection('claims').get();
+  this.db
+  .collection('claims')
+  .onSnapshot(snapshot => {
 
-      const productsSnapshot =
-      await this.db.collection('products').get();
+    this.claims =
+    snapshot.docs.map(doc => ({
+      id:doc.id,
+      ...doc.data()
+    }));
 
-      this.claims =
-      claimsSnapshot.docs.map(doc => ({
-        id:doc.id,
-        ...doc.data()
-      }));
+    this.calculateStats();
 
-      this.products =
-      productsSnapshot.docs.map(doc => ({
-        id:doc.id,
-        ...doc.data()
-      }));
+    this.renderCharts();
 
-      this.calculateStats();
+  });
 
-      this.renderCharts();
+  this.db
+  .collection('products')
+  .onSnapshot(snapshot => {
 
-    },
+    this.products =
+    snapshot.docs.map(doc => ({
+      id:doc.id,
+      ...doc.data()
+    }));
 
+    this.renderCharts();
+
+  });
+
+},
+    
     calculateStats(){
 
       this.approvedClaims =
@@ -292,46 +300,50 @@ function analyticsApp(){
 
     },
 
-    renderClaimsChart(){
+  renderClaimsChart(){
 
-      const ctx =
-      document.getElementById('claimsChart');
+  const ctx =
+  document.getElementById('claimsChart');
 
-      new Chart(ctx,{
+  if(this.claimsChart){
+    this.claimsChart.destroy();
+  }
 
-        type:'doughnut',
+  this.claimsChart = new Chart(ctx,{
 
-        data:{
-          labels:['Pending','Approved','Rejected'],
-          datasets:[{
-            data:[
-              this.claims.filter(c=>c.status==='pending').length,
-              this.approvedClaims,
-              this.rejectedClaims
-            ],
-            backgroundColor:[
-              '#facc15',
-              '#10b981',
-              '#ef4444'
-            ]
-          }]
-        },
+    type:'doughnut',
 
-        options:{
-          responsive:true,
-          plugins:{
-            legend:{
-              labels:{
-                color:'white'
-              }
-            }
-          }
-        }
-
-      });
-
+    data:{
+      labels:['Pending','Approved','Rejected'],
+      datasets:[{
+        data:[
+          this.claims.filter(c=>c.status==='pending').length,
+          this.approvedClaims,
+          this.rejectedClaims
+        ],
+        backgroundColor:[
+          '#facc15',
+          '#10b981',
+          '#ef4444'
+        ]
+      }]
     },
 
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{
+          labels:{
+            color:'white'
+          }
+        }
+      }
+    }
+
+  });
+
+},
+    
     renderCategoryChart(){
 
       const categories = {};
@@ -349,8 +361,12 @@ function analyticsApp(){
       const ctx =
       document.getElementById('categoryChart');
 
-      new Chart(ctx,{
+if(this.categoryChart){
+  this.categoryChart.destroy();
+}
 
+this.categoryChart = new Chart(ctx,{
+  
         type:'pie',
 
         data:{
@@ -405,8 +421,12 @@ function analyticsApp(){
       const ctx =
       document.getElementById('revenueChart');
 
-      new Chart(ctx,{
+if(this.revenueChart){
+  this.revenueChart.destroy();
+}
 
+this.revenueChart = new Chart(ctx,{
+  
         type:'line',
 
         data:{
@@ -470,8 +490,12 @@ function analyticsApp(){
       const ctx =
       document.getElementById('productsChart');
 
-      new Chart(ctx,{
+if(this.productsChart){
+  this.productsChart.destroy();
+}
 
+this.productsChart = new Chart(ctx,{
+  
         type:'bar',
 
         data:{

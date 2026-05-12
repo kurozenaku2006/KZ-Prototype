@@ -683,18 +683,32 @@
               <div class="flex gap-2 w-full">
 
                 <button
-                  @click.stop="updateClaimStatus(claim,'approved')"
-                  class="flex-1 bg-gradient-to-r from-cyan-500 to-emerald-500 px-4 py-3 rounded-2xl font-bold">
+  @click.stop="updateClaimStatus(claim,'approved')"
+  :disabled="processingButtons[claim.id + '_approved']"
+  class="flex-1 bg-gradient-to-r from-cyan-500 to-emerald-500 px-4 py-3 rounded-2xl font-bold disabled:opacity-50">
 
-                  APPROVE
+  <span x-show="!processingButtons[claim.id + '_approved']">
+    APPROVE
+  </span>
 
-                </button>
+  <span x-show="processingButtons[claim.id + '_approved']">
+    PROCESSING...
+  </span>
 
+</button>
+                
                 <button
                   @click.stop="updateClaimStatus(claim,'rejected')"
+                  :disabled="processingButtons[claim.id + '_rejected']"
                   class="flex-1 bg-gradient-to-r from-red-500 to-pink-500 px-4 py-3 rounded-2xl font-bold">
 
-                  REJECT
+                  <span x-show="!processingButtons[claim.id + '_rejected']">
+  REJECT
+</span>
+
+<span x-show="processingButtons[claim.id + '_rejected']">
+  PROCESSING...
+</span>
 
                 </button>
 
@@ -710,9 +724,16 @@
 
                 <button
                   @click.stop="updateClaimStatus(claim,'pending')"
+                  :disabled="processingButtons[claim.id + '_pending']"
                   class="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 px-4 py-3 rounded-2xl font-bold">
 
-                  REVERT
+                <span x-show="!processingButtons[claim.id + '_pending']">
+  REVERT
+</span>
+
+<span x-show="processingButtons[claim.id + '_pending']">
+  PROCESSING...
+</span>
 
                 </button>
 
@@ -736,9 +757,16 @@
 
                 <button
                   @click.stop="updateClaimStatus(claim,'pending')"
+                  :disabled="processingButtons[claim.id + '_pending']"
                   class="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 px-4 py-3 rounded-2xl font-bold">
 
-                  REVERT
+                <span x-show="!processingButtons[claim.id + '_pending']">
+  REVERT
+</span>
+
+<span x-show="processingButtons[claim.id + '_pending']">
+  PROCESSING...
+</span>
 
                 </button>
 

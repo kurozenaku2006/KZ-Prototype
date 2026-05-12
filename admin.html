@@ -1179,7 +1179,8 @@ function adminApp(){
     toasts:[],
 
     processingClaims:{},
-
+processingButtons:{},
+    
     showClaimModal:false,
 
 selectedClaim:null,
@@ -1636,12 +1637,14 @@ this.showToast(
     
     async updateClaimStatus(claim,newStatus){
 
-      if(this.processingClaims[claim.id]){
-        return;
-      }
+const actionKey = claim.id + '_' + newStatus;
 
-      this.processingClaims[claim.id] = true;
+if(this.processingButtons[actionKey]){
+  return;
+}
 
+this.processingButtons[actionKey] = true;
+      
       try{
 
         await this.db.runTransaction(async transaction => {
@@ -1755,7 +1758,7 @@ this.showToast(
 
       finally{
 
-        delete this.processingClaims[claim.id];
+  delete this.processingButtons[actionKey];
 
       }
 

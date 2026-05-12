@@ -683,7 +683,7 @@
               <div class="flex gap-2 w-full">
 
                 <button
-                  @click="updateClaimStatus(claim,'approved')"
+                  @click.stop="updateClaimStatus(claim,'approved')"
                   class="flex-1 bg-gradient-to-r from-cyan-500 to-emerald-500 px-4 py-3 rounded-2xl font-bold">
 
                   APPROVE
@@ -691,7 +691,7 @@
                 </button>
 
                 <button
-                  @click="updateClaimStatus(claim,'rejected')"
+                  @click.stop="updateClaimStatus(claim,'rejected')"
                   class="flex-1 bg-gradient-to-r from-red-500 to-pink-500 px-4 py-3 rounded-2xl font-bold">
 
                   REJECT
@@ -709,7 +709,7 @@
               <div class="flex gap-2 w-full">
 
                 <button
-                  @click="updateClaimStatus(claim,'pending')"
+                  @click.stop="updateClaimStatus(claim,'pending')"
                   class="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 px-4 py-3 rounded-2xl font-bold">
 
                   REVERT
@@ -717,7 +717,7 @@
                 </button>
 
                 <button
-                  @click="updateClaimStatus(claim,'rejected')"
+                  @click.stop="updateClaimStatus(claim,'rejected')"
                   class="flex-1 bg-gradient-to-r from-red-500 to-pink-500 px-4 py-3 rounded-2xl font-bold">
 
                   REJECT
@@ -735,7 +735,7 @@
               <div class="flex gap-2 w-full">
 
                 <button
-                  @click="updateClaimStatus(claim,'pending')"
+                  @click.stop="updateClaimStatus(claim,'pending')"
                   class="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 px-4 py-3 rounded-2xl font-bold">
 
                   REVERT
@@ -1083,7 +1083,7 @@
         <div class="flex flex-wrap gap-3">
 
           <button
-            @click="updateClaimStatus(selectedClaim,'approved')"
+            @click.stop="updateClaimStatus(selectedClaim,'approved')"
             class="flex-1 bg-gradient-to-r from-cyan-500 to-emerald-500 px-5 py-4 rounded-2xl font-bold">
 
             APPROVE
@@ -1724,6 +1724,9 @@ productDoc.data();
           });
 
         });
+
+        this.showClaimModal = false;
+this.selectedClaim = null;
 
          this.showToast(
   newStatus === 'approved'

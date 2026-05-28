@@ -1192,6 +1192,7 @@ function adminApp(){
     claims:[],
     products:[],
     claimBin:[],
+    activityLogs:[],
     toasts:[],
 
     processingClaims:{},
@@ -1298,6 +1299,20 @@ auth.onAuthStateChanged(user => {
         }));
 
       });
+
+      this.db
+.collection('activityLogs')
+.orderBy('createdAt','desc')
+.limit(50)
+.onSnapshot(snapshot => {
+
+  this.activityLogs =
+  snapshot.docs.map(doc => ({
+    id:doc.id,
+    ...doc.data()
+  }));
+
+});
 
     },
 
@@ -1465,6 +1480,15 @@ this.newKit = {
 
 this.showAddKit = false;
 
+await this.logActivity(
+  'KIT_ADDED',
+  {
+    name:this.newKit.name,
+    category:this.newKit.category,
+    price:Number(this.newKit.price)
+  }
+);
+
 this.showToast(
   'success',
   'KIT ADDED',
@@ -1546,6 +1570,14 @@ await this.db
 
 this.showEditKit = false;
 
+await this.logActivity(
+  'KIT_UPDATED',
+  {
+    id:this.editKit.id,
+    name:this.editKit.name
+  }
+);
+
 this.showToast(
   'success',
   'KIT UPDATED',
@@ -1580,11 +1612,18 @@ this.showToast(
     }
 
     await this.db
-    .collection('products')
-    .doc(id)
-    .delete();
+.collection('products')
+.doc(id)
+.delete();
 
-    this.showToast(
+await this.logActivity(
+  'KIT_DELETED',
+  {
+    productId:id
+  }
+);
+
+this.showToast(
       'warning',
       'KIT DELETED',
       'Kit removed permanently'
@@ -1621,6 +1660,14 @@ this.showToast(
       firebase.firestore.FieldValue.serverTimestamp()
 
     });
+
+    await this.logActivity(
+  'KIT_RESTOCKED',
+  {
+    product:product.name,
+    added:amount
+  }
+);
 
     this.showToast(
       'success',
@@ -1747,6 +1794,16 @@ productDoc.data();
         this.showClaimModal = false;
 this.selectedClaim = null;
 
+        await this.logActivity(
+  'CLAIM_STATUS_UPDATED',
+  {
+    customer:claim.customerName,
+    product:claim.productName,
+    oldStatus:claim.status,
+    newStatus
+  }
+);
+
          this.showToast(
   newStatus === 'approved'
     ? 'success'
@@ -1872,6 +1929,41 @@ removeToast(id){
 
   this.toasts =
   this.toasts.filter(t => t.id !== id);
+
+},
+
+    async logActivity(action,details={}){
+
+  try{
+
+    const user =
+    firebase.auth().currentUser;
+
+    await this.db
+    .collection('activityLogs')
+    .add({
+
+      action,
+
+      details,
+
+      adminEmail:user?.email || 'Unknown',
+
+      createdAt:
+      firebase.firestore.FieldValue.serverTimestamp()
+
+    });
+
+  }
+
+  catch(error){
+
+    console.error(
+      'Activity log failed:',
+      error
+    );
+
+  }
 
 },
 

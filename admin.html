@@ -1278,6 +1278,7 @@ function adminApp(){
     deletedProducts:[],
     claimBin:[],
     activityLogs:[],
+    sales:[],
     toasts:[],
 
     processingClaims:{},
@@ -1415,6 +1416,19 @@ snapshot.docs
 
 });
 
+      this.db
+.collection('sales')
+.orderBy('createdAt','desc')
+.onSnapshot(snapshot => {
+
+  this.sales =
+  snapshot.docs.map(doc => ({
+    id:doc.id,
+    ...doc.data()
+  }));
+
+});
+
     },
 
    filteredClaims(){
@@ -1521,6 +1535,57 @@ snapshot.docs
       ).length;
 
     },
+
+  totalSalesRevenue(){
+
+  return this.sales.reduce(
+
+    (sum,sale)=>
+
+    sum + Number(sale.amount || 0),
+
+    0
+
+  );
+
+},
+
+totalSalesCount(){
+
+  return this.sales.length;
+
+},
+
+todayRevenue(){
+
+  const today =
+  new Date().toDateString();
+
+  return this.sales
+
+  .filter(sale => {
+
+    if(!sale.createdAt){
+      return false;
+    }
+
+    return new Date(
+      sale.createdAt.seconds * 1000
+    ).toDateString() === today;
+
+  })
+
+  .reduce(
+
+    (sum,sale)=>
+
+    sum + Number(sale.amount || 0),
+
+    0
+
+  );
+
+},
     
 async addKit(){
 
@@ -1997,6 +2062,59 @@ productDoc.data();
           });
 
         });
+
+        // CREATE SALES RECORD
+if(
+  claim.status !== 'approved' &&
+  newStatus === 'approved'
+){
+
+  await this.db.collection('sales').add({
+
+    claimId:claim.id,
+
+    productId:claim.productId || '',
+
+    productName:claim.productName || '',
+
+    customerName:claim.customerName || '',
+
+    amount:Number(claim.price || 0),
+
+    createdAt:
+    firebase.firestore.FieldValue.serverTimestamp()
+
+  });
+
+}
+
+// REMOVE SALES RECORD IF APPROVAL REVERTED
+
+if(
+  claim.status === 'approved' &&
+  newStatus !== 'approved'
+){
+
+  const salesSnapshot =
+  await this.db
+  .collection('sales')
+  .where('claimId','==',claim.id)
+  .get();
+
+  const deletePromises = [];
+
+  salesSnapshot.forEach(doc => {
+
+    deletePromises.push(
+      doc.ref.delete()
+    );
+
+  });
+
+  await Promise.all(deletePromises);
+
+}
+        
 
         this.showClaimModal = false;
 this.selectedClaim = null;

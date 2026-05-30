@@ -203,6 +203,14 @@
       </button>
 
       <button
+  @click="section='activity'; drawerOpen=false"
+  class="w-full glass p-4 rounded-2xl text-left hover:bg-white/10">
+
+  📜 Activity Logs
+
+</button>
+
+      <button
         onclick="window.location.href='index.html'"
         class="w-full glass p-4 rounded-2xl text-left hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] active:scale-95">
 
@@ -899,6 +907,26 @@
 
           </div>
 
+<div class="mt-4 flex gap-2">
+
+  <button
+    @click="restoreClaim(claim)"
+    class="flex-1 bg-gradient-to-r from-cyan-500 to-emerald-500 px-4 py-3 rounded-2xl font-bold">
+
+    RESTORE
+
+  </button>
+
+  <button
+    @click="permanentlyDeleteClaim(claim)"
+    class="flex-1 bg-gradient-to-r from-red-500 to-pink-500 px-4 py-3 rounded-2xl font-bold">
+
+    DELETE
+
+  </button>
+
+</div>
+          
         </div>
 
       </template>
@@ -981,6 +1009,56 @@
     </div>
 
   </div>
+
+  <!-- ACTIVITY LOGS -->
+
+<div x-show="section==='activity'">
+
+  <h2 class="text-3xl font-black mb-6">
+    📜 Activity Logs
+  </h2>
+
+  <div
+    x-show="activityLogs.length===0"
+    class="glass rounded-3xl p-8 text-center text-gray-400">
+
+    No activity found
+
+  </div>
+
+  <div class="space-y-3">
+
+    <template x-for="log in activityLogs" :key="log.id">
+
+      <div class="glass rounded-2xl p-4">
+
+        <div class="font-bold text-cyan-300"
+             x-text="log.action">
+        </div>
+
+        <div class="text-sm text-gray-300 mt-2">
+
+          Admin:
+          <span x-text="log.adminEmail"></span>
+
+        </div>
+
+        <div class="text-sm text-gray-400 mt-1">
+
+          <pre
+            class="whitespace-pre-wrap"
+            x-text="JSON.stringify(log.details,null,2)">
+          </pre>
+
+        </div>
+
+      </div>
+
+    </template>
+
+  </div>
+
+</div>
 
    <!-- CLAIM DETAILS MODAL -->
 
@@ -1449,17 +1527,21 @@ if(
   return;
 }
 
+const addedKit = {
+  ...this.newKit
+};
+
 await this.db
 .collection('products')
 .add({
 
-  name:this.newKit.name,
-  price:Number(this.newKit.price),
-  stock:Number(this.newKit.stock || 0),
-  category:this.newKit.category,
+  name:addedKit.name,
+  price:Number(addedKit.price),
+  stock:Number(addedKit.stock || 0),
+  category:addedKit.category,
 
   image:
-  this.newKit.image ||
+  addedKit.image ||
   'https://placehold.co/600x600/111827/ffffff?text=NO+IMAGE',
 
   createdAt:
@@ -1470,6 +1552,15 @@ await this.db
 
 });
 
+await this.logActivity(
+  'KIT_ADDED',
+  {
+    name:addedKit.name,
+    category:addedKit.category,
+    price:Number(addedKit.price)
+  }
+);
+
 this.newKit = {
   name:'',
   price:'',
@@ -1479,15 +1570,6 @@ this.newKit = {
 };
 
 this.showAddKit = false;
-
-await this.logActivity(
-  'KIT_ADDED',
-  {
-    name:this.newKit.name,
-    category:this.newKit.category,
-    price:Number(this.newKit.price)
-  }
-);
 
 this.showToast(
   'success',
@@ -1889,6 +1971,21 @@ this.showToast(
 
         });
 
+        await this.logActivity(
+  'CLAIM_MOVED_TO_BIN',
+  {
+    customer:claim.customerName,
+    product:claim.productName,
+    status:claim.status
+  }
+);
+
+this.showToast(
+  'warning',
+  'CLAIM DELETED',
+  'Claim moved to bin'
+);
+
       }
 
       catch(error){
@@ -1905,6 +2002,107 @@ this.showToast(
       }
 
     },
+
+    async restoreClaim(claim){
+
+  try{
+
+    await this.db.runTransaction(async transaction => {
+
+      const binRef =
+      this.db.collection('claimBin')
+      .doc(claim.id);
+
+      const restoredRef =
+      this.db.collection('claims')
+      .doc(claim.originalClaimId || claim.id);
+
+      transaction.set(restoredRef,{
+        ...claim
+      });
+
+      transaction.delete(binRef);
+
+    });
+
+    await this.logActivity(
+      'CLAIM_RESTORED',
+      {
+        customer:claim.customerName,
+        product:claim.productName
+      }
+    );
+
+    this.showToast(
+      'success',
+      'CLAIM RESTORED',
+      'Claim returned to active claims'
+    );
+
+  }
+
+  catch(error){
+
+    console.error(error);
+
+    this.showToast(
+      'error',
+      'RESTORE FAILED',
+      error.message
+    );
+
+  }
+
+},
+
+async permanentlyDeleteClaim(claim){
+
+  try{
+
+    const confirmDelete =
+    confirm(
+      'Permanently delete this claim? This cannot be undone.'
+    );
+
+    if(!confirmDelete){
+      return;
+    }
+
+    await this.db
+    .collection('claimBin')
+    .doc(claim.id)
+    .delete();
+
+    await this.logActivity(
+      'CLAIM_PERMANENTLY_DELETED',
+      {
+        customer:claim.customerName,
+        product:claim.productName,
+        status:claim.status
+      }
+    );
+
+    this.showToast(
+      'error',
+      'PERMANENT DELETE',
+      'Claim permanently removed'
+    );
+
+  }
+
+  catch(error){
+
+    console.error(error);
+
+    this.showToast(
+      'error',
+      'DELETE FAILED',
+      error.message
+    );
+
+  }
+
+},
     
 showToast(type,title,message){
 

@@ -195,12 +195,12 @@
       </button>
 
       <button
-        @click="section='analysis'; drawerOpen=false"
-        class="w-full glass p-4 rounded-2xl text-left hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] active:scale-95">
+  @click="section='productTrash'; drawerOpen=false"
+  class="w-full glass p-4 rounded-2xl text-left hover:bg-white/10">
 
-        ߓ Analysis
+  🗑 Product Trash
 
-      </button>
+</button>
 
       <button
   @click="section='activity'; drawerOpen=false"
@@ -826,6 +826,73 @@
   
   </div>
 
+  <!-- PRODUCT TRASH -->
+
+<div x-show="section==='productTrash'">
+
+  <h2 class="text-3xl font-black mb-6">
+    🗑 Product Trash
+  </h2>
+
+  <div
+    x-show="deletedProducts.length===0"
+    class="glass rounded-3xl p-8 text-center text-gray-400">
+
+    No deleted products
+
+  </div>
+
+  <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+
+    <template
+      x-for="product in deletedProducts"
+      :key="product.id">
+
+      <div class="glass rounded-3xl p-5">
+
+        <img
+          :src="product.image"
+          class="h-48 w-full object-contain mb-4 rounded-2xl">
+
+        <h2
+          class="text-xl font-bold"
+          x-text="product.name">
+        </h2>
+
+        <p class="text-cyan-300 text-2xl font-black mt-2">
+
+          ₹<span x-text="product.price"></span>
+
+        </p>
+
+        <div class="flex gap-2 mt-4">
+
+          <button
+            @click="restoreKit(product)"
+            class="flex-1 bg-gradient-to-r from-cyan-500 to-emerald-500 px-4 py-3 rounded-2xl font-bold">
+
+            RESTORE
+
+          </button>
+
+          <button
+            @click="permanentlyDeleteKit(product)"
+            class="flex-1 bg-gradient-to-r from-red-500 to-pink-500 px-4 py-3 rounded-2xl font-bold">
+
+            DELETE
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </template>
+
+  </div>
+
+</div>
+
   <!-- CLAIM BIN -->
 
   <div x-show="section==='bin'">
@@ -935,81 +1002,6 @@
 
   </div>
 
-  <!-- ANALYSIS -->
-
-  <div x-show="section==='analysis'">
-
-    <h2 class="text-3xl font-black mb-6">
-      ߓ Analysis
-    </h2>
-
-    <div class="grid md:grid-cols-2 gap-5">
-
-      <div class="glass rounded-3xl p-6 glow">
-
-        <h3 class="text-2xl font-bold mb-4">
-          Claim Overview
-        </h3>
-
-        <div class="space-y-4">
-
-          <div class="flex justify-between">
-            <span>Total Claims</span>
-            <span class="font-bold" x-text="claims.length"></span>
-          </div>
-
-          <div class="flex justify-between">
-            <span>Pending</span>
-            <span class="font-bold text-yellow-300" x-text="pendingClaims().length"></span>
-          </div>
-
-          <div class="flex justify-between">
-            <span>Approved</span>
-            <span class="font-bold text-emerald-300" x-text="approvedClaims().length"></span>
-          </div>
-
-          <div class="flex justify-between">
-            <span>Rejected</span>
-            <span class="font-bold text-red-300" x-text="rejectedClaims().length"></span>
-          </div>
-
-        </div>
-
-      </div>
-
-      <div class="glass rounded-3xl p-6 glow">
-
-        <h3 class="text-2xl font-bold mb-4">
-          Inventory Overview
-        </h3>
-
-        <div class="space-y-4">
-
-          <div class="flex justify-between">
-            <span>Total Kits</span>
-            <span class="font-bold" x-text="products.length"></span>
-          </div>
-
-          <div class="flex justify-between">
-            <span>Low Stock Kits</span>
-            <span class="font-bold text-orange-300" x-text="lowStockCount()"></span>
-          </div>
-
-          <div class="flex justify-between">
-            <span>Total Revenue</span>
-            <span class="font-bold text-cyan-300">
-              ₹<span x-text="revenue()"></span>
-            </span>
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
   <!-- ACTIVITY LOGS -->
 
 <div x-show="section==='activity'">
@@ -1042,6 +1034,20 @@
           <span x-text="log.adminEmail"></span>
 
         </div>
+
+        <div class="text-xs text-gray-500 mt-1">
+
+  <span
+    x-text="
+      log.createdAt
+      ? new Date(
+          log.createdAt.seconds * 1000
+        ).toLocaleString()
+      : 'Loading...'
+    ">
+  </span>
+
+</div>
 
         <div class="text-sm text-gray-400 mt-1">
 
@@ -1269,6 +1275,7 @@ function adminApp(){
 
     claims:[],
     products:[],
+    deletedProducts:[],
     claimBin:[],
     activityLogs:[],
     toasts:[],
@@ -1345,12 +1352,28 @@ auth.onAuthStateChanged(user => {
       .onSnapshot(snapshot => {
 
         this.products =
-        snapshot.docs.map(doc => ({
-          id:doc.id,
-          ...doc.data()
-        }));
+snapshot.docs
+.map(doc=>({
+  id:doc.id,
+  ...doc.data()
+}))
+.filter(product => !product.isDeleted);
 
       });
+
+      this.db
+.collection('products')
+.onSnapshot(snapshot => {
+
+  this.deletedProducts =
+  snapshot.docs
+  .map(doc => ({
+    id:doc.id,
+    ...doc.data()
+  }))
+  .filter(product => product.isDeleted);
+
+});
 
       this.db
       .collection('claims')
@@ -1638,7 +1661,7 @@ await this.db
 
   name:this.editKit.name,
   price:Number(this.editKit.price),
-  stock:Number(this.editKit.stock),
+  stock:Number(this.editKit.stock || 0),
   category:this.editKit.category,
 
   image:
@@ -1682,33 +1705,42 @@ this.showToast(
 
 },
 
- async deleteKit(id){
+async deleteKit(id){
 
   try{
 
     const confirmDelete =
-    confirm('Delete this kit permanently?');
+    confirm(
+      'Move this kit to Trash?'
+    );
 
     if(!confirmDelete){
       return;
     }
 
     await this.db
-.collection('products')
-.doc(id)
-.delete();
+    .collection('products')
+    .doc(id)
+    .update({
 
-await this.logActivity(
-  'KIT_DELETED',
-  {
-    productId:id
-  }
-);
+      isDeleted:true,
 
-this.showToast(
+      deletedAt:
+      firebase.firestore.FieldValue.serverTimestamp()
+
+    });
+
+    await this.logActivity(
+      'KIT_MOVED_TO_TRASH',
+      {
+        productId:id
+      }
+    );
+
+    this.showToast(
       'warning',
-      'KIT DELETED',
-      'Kit removed permanently'
+      'KIT MOVED',
+      'Kit moved to Trash'
     );
 
   }
@@ -1720,13 +1752,106 @@ this.showToast(
     this.showToast(
       'error',
       'DELETE FAILED',
-      'Failed to delete kit'
+      'Failed to move kit'
     );
 
   }
 
 },
 
+    async restoreKit(product){
+
+  try{
+
+    await this.db
+    .collection('products')
+    .doc(product.id)
+    .update({
+
+      isDeleted:false,
+
+      deletedAt:null
+
+    });
+
+    await this.logActivity(
+      'KIT_RESTORED',
+      {
+        productId:product.id,
+        name:product.name
+      }
+    );
+
+    this.showToast(
+      'success',
+      'KIT RESTORED',
+      product.name + ' restored'
+    );
+
+  }
+
+  catch(error){
+
+    console.error(error);
+
+    this.showToast(
+      'error',
+      'RESTORE FAILED',
+      error.message
+    );
+
+  }
+
+},
+
+    async permanentlyDeleteKit(product){
+
+  try{
+
+    const confirmDelete =
+    prompt(
+      'Type DELETE to permanently remove this kit'
+    );
+
+    if(confirmDelete !== 'DELETE'){
+      return;
+    }
+
+    await this.db
+    .collection('products')
+    .doc(product.id)
+    .delete();
+
+    await this.logActivity(
+      'KIT_PERMANENTLY_DELETED',
+      {
+        productId:product.id,
+        name:product.name
+      }
+    );
+
+    this.showToast(
+      'error',
+      'KIT REMOVED',
+      'Kit permanently deleted'
+    );
+
+  }
+
+  catch(error){
+
+    console.error(error);
+
+    this.showToast(
+      'error',
+      'DELETE FAILED',
+      error.message
+    );
+
+  }
+
+},
+    
   async quickRestock(product,amount){
 
   try{
@@ -1952,6 +2077,30 @@ this.showToast(
           const claimData =
           claimDoc.data();
 
+          if(
+  claimData.status === 'approved'
+  &&
+  claimData.productId
+){
+
+  const productRef =
+  this.db.collection('products')
+  .doc(claimData.productId);
+
+  const productDoc =
+  await transaction.get(productRef);
+
+  if(productDoc.exists){
+
+    transaction.update(productRef,{
+      stock:
+      Number(productDoc.data().stock || 0) + 1
+    });
+
+  }
+
+}
+
                    const binRef =
           this.db.collection('claimBin')
           .doc();
@@ -2017,11 +2166,46 @@ this.showToast(
       this.db.collection('claims')
       .doc(claim.originalClaimId || claim.id);
 
-      transaction.set(restoredRef,{
-        ...claim
-      });
+      const {
+        deletedAt,
+        originalClaimId,
+        ...cleanClaim
+      } = claim;
+
+      transaction.set(
+        restoredRef,
+        cleanClaim
+      );
 
       transaction.delete(binRef);
+
+      // STOCK FIX
+
+      if(
+        cleanClaim.status === 'approved'
+        &&
+        cleanClaim.productId
+      ){
+
+        const productRef =
+        this.db.collection('products')
+        .doc(cleanClaim.productId);
+
+        const productDoc =
+        await transaction.get(productRef);
+
+        if(productDoc.exists){
+
+          const currentStock =
+          Number(productDoc.data().stock || 0);
+
+          transaction.update(productRef,{
+            stock:Math.max(0,currentStock - 1)
+          });
+
+        }
+
+      }
 
     });
 
@@ -2060,13 +2244,13 @@ async permanentlyDeleteClaim(claim){
   try{
 
     const confirmDelete =
-    confirm(
-      'Permanently delete this claim? This cannot be undone.'
-    );
-
-    if(!confirmDelete){
-      return;
-    }
+   prompt(
+'Type DELETE to permanently remove this claim'
+);
+    
+   if(confirmDelete !== 'DELETE'){
+  return;
+}
 
     await this.db
     .collection('claimBin')

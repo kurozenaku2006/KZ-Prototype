@@ -722,16 +722,9 @@ class="flex-1 bg-gradient-to-r from-red-500 to-pink-500 px-4 py-3 rounded-2xl fo
 
                 <button
                   @click.stop="updateClaimStatus(claim,'pending')"
-                  :disabled="processingButtons[claim.id + '_pending']"
 class="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 px-4 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-[1.03] hover:brightness-125 active:scale-95 shadow-[0_0_20px_rgba(245,158,11,.35)]">
                   
-                <span x-show="!processingButtons[claim.id + '_pending']">
   REVERT
-</span>
-
-<span x-show="processingButtons[claim.id + '_pending']">
-  PROCESSING...
-</span>
 
                 </button>
 
@@ -755,18 +748,11 @@ class="flex-1 bg-gradient-to-r from-red-500 to-pink-500 px-4 py-3 rounded-2xl fo
 
                 <button
                   @click.stop="updateClaimStatus(claim,'pending')"
-                  :disabled="processingButtons[claim.id + '_pending']"
 class="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 px-4 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-[1.03] hover:brightness-125 active:scale-95 shadow-[0_0_20px_rgba(245,158,11,.35)]">
-                  
-                <span x-show="!processingButtons[claim.id + '_pending']">
-  REVERT
-</span>
 
-<span x-show="processingButtons[claim.id + '_pending']">
-  PROCESSING...
-</span>
+                    REVERT
 
-                </button>
+                              </button>
 
                 <button
                   @click.stop="moveClaimToBin(claim)"

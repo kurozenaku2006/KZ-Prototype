@@ -363,27 +363,51 @@ this.sales
 
     },
 
-    renderCharts(){
+renderCharts(){
 
-      this.renderClaimsChart();
-      this.renderCategoryChart();
-      this.renderRevenueChart();
-      this.renderProductsChart();
+  console.log("claimsChart",
+    document.getElementById("claimsChart"));
 
-    },
+  console.log("categoryChart",
+    document.getElementById("categoryChart"));
 
+  console.log("revenueChart",
+    document.getElementById("revenueChart"));
+
+  console.log("productsChart",
+    document.getElementById("productsChart"));
+
+  this.renderClaimsChart();
+  this.renderCategoryChart();
+  this.renderRevenueChart();
+  this.renderProductsChart();
+
+},
+    
   renderClaimsChart(){
 
-  const ctx =
-  document.getElementById('claimsChart');
+const canvas =
+document.getElementById('claimsChart');
 
+if(!canvas){
+  console.log('claimsChart canvas not found');
+  return;
+}
+
+const ctx = canvas.getContext('2d');
+
+if(!ctx){
+  console.log('claimsChart context failed');
+  return;
+}
+    
   if(!ctx) return;
     
   if(this.claimsChart){
     this.claimsChart.destroy();
   }
 
-  this.claimsChart = new Chart(ctx,{
+  this.claimsChart = new Chart(canvas,{
 
     type:'doughnut',
 

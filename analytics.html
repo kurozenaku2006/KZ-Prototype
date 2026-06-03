@@ -377,6 +377,8 @@ this.sales
   const ctx =
   document.getElementById('claimsChart');
 
+  if(!ctx) return;
+    
   if(this.claimsChart){
     this.claimsChart.destroy();
   }
@@ -432,6 +434,8 @@ this.sales
 
       const ctx =
       document.getElementById('categoryChart');
+
+      if(!ctx) return;
 
 if(this.categoryChart){
   this.categoryChart.destroy();
@@ -489,6 +493,8 @@ renderRevenueChart(){
 
       const ctx =
       document.getElementById('revenueChart');
+
+  if(!ctx) return;
 
 if(this.revenueChart){
   this.revenueChart.destroy();
@@ -558,6 +564,8 @@ this.revenueChart = new Chart(ctx,{
 
       const ctx =
       document.getElementById('productsChart');
+
+      if(!ctx) return;
 
 if(this.productsChart){
   this.productsChart.destroy();

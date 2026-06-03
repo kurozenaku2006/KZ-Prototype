@@ -104,7 +104,7 @@
 
   <!-- KPI STATS -->
 
-  <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+  <div class="grid grid-cols-2 lg:grid-cols-8 gap-4 mb-8">
 
     <div class="glass rounded-3xl p-5 glow">
       <p class="text-gray-400 text-sm">TOTAL CLAIMS</p>
@@ -122,11 +122,29 @@
     </div>
 
     <div class="glass rounded-3xl p-5 glow">
+  <p class="text-gray-400 text-sm">PENDING</p>
+  <h2 class="text-3xl font-black mt-2 text-yellow-300"
+      x-text="pendingClaims"></h2>
+</div>
+
+    <div class="glass rounded-3xl p-5 glow">
       <p class="text-gray-400 text-sm">REVENUE</p>
       <h2 class="text-3xl font-black mt-2 text-cyan-300">
         ₹<span x-text="revenue"></span>
       </h2>
     </div>
+
+    <div class="glass rounded-3xl p-5 glow">
+  <p class="text-gray-400 text-sm">TOTAL SALES</p>
+  <h2 class="text-3xl font-black mt-2 text-purple-300"
+      x-text="totalSales"></h2>
+</div>
+
+    <div class="glass rounded-3xl p-5 glow">
+  <p class="text-gray-400 text-sm">LOW STOCK</p>
+  <h2 class="text-3xl font-black mt-2 text-red-400"
+      x-text="lowStockCount"></h2>
+</div>
 
     <div class="glass rounded-3xl p-5 glow">
       <p class="text-gray-400 text-sm">TOTAL PRODUCTS</p>
@@ -201,9 +219,15 @@ function analyticsApp(){
 
     claims:[],
     products:[],
+    sales:[],
+    
+lowStockCount:0,
+    
+    totalSales:0,
 
     approvedClaims:0,
     rejectedClaims:0,
+    pendingClaims:0,
     revenue:0,
 
     claimsChart:null,
@@ -227,14 +251,30 @@ function analyticsApp(){
 
       firebase.auth().onAuthStateChanged(user => {
 
-        if(!user){
+  if(!user){
 
-          window.location.href='login.html';
-          return;
+    window.location.href='login.html';
+    return;
 
-        }
+  }
 
-      });
+  const adminEmails = [
+    'vedantbhalge2006@gmail.com'
+  ];
+
+  if(!adminEmails.includes(user.email)){
+
+    alert('Access denied');
+
+    firebase.auth().signOut();
+
+    window.location.href='login.html';
+
+    return;
+
+  }
+
+});
 
       this.db = firebase.firestore();
 
@@ -265,14 +305,37 @@ function analyticsApp(){
   .onSnapshot(snapshot => {
 
     this.products =
-    snapshot.docs.map(doc => ({
-      id:doc.id,
-      ...doc.data()
-    }));
+snapshot.docs
+.map(doc => ({
+  id:doc.id,
+  ...doc.data()
+}))
+.filter(product => !product.isDeleted);
 
-    this.renderCharts();
+this.lowStockCount =
+this.products.filter(
+  product => Number(product.stock || 0) <= 5
+).length;
+
+this.renderCharts();
 
   });
+
+     this.db
+.collection('sales')
+.onSnapshot(snapshot => {
+
+  this.sales =
+  snapshot.docs.map(doc => ({
+    id:doc.id,
+    ...doc.data()
+  }));
+
+  this.calculateStats();
+
+  this.renderCharts();
+
+});
 
 },
     
@@ -284,10 +347,19 @@ function analyticsApp(){
       this.rejectedClaims =
       this.claims.filter(c => c.status === 'rejected').length;
 
-      this.revenue =
-      this.claims
-      .filter(c => c.status === 'approved')
-      .reduce((sum,c)=> sum + Number(c.price || 0),0);
+      this.pendingClaims =
+this.claims.filter(c => c.status === 'pending').length;
+
+        this.totalSales =
+  this.sales.length;
+
+    this.revenue =
+this.sales
+.reduce(
+  (sum,sale)=>
+  sum + Number(sale.amount || 0),
+  0
+);
 
     },
 
@@ -398,25 +470,22 @@ this.categoryChart = new Chart(ctx,{
 
     },
 
-    renderRevenueChart(){
+renderRevenueChart(){
 
-      const approved =
-      this.claims.filter(c => c.status === 'approved');
+  const revenueData = {};
 
-      const revenueData = {};
+  this.sales.forEach(sale => {
 
-      approved.forEach(claim => {
+    const date =
+    sale.createdAt?.toDate
+    ? sale.createdAt.toDate().toLocaleDateString()
+    : 'Unknown';
 
-        const date =
-        claim.createdAt?.toDate
-        ? claim.createdAt.toDate().toLocaleDateString()
-        : 'Unknown';
+    revenueData[date] =
+    (revenueData[date] || 0)
+    + Number(sale.amount || 0);
 
-        revenueData[date] =
-        (revenueData[date] || 0)
-        + Number(claim.price || 0);
-
-      });
+  });
 
       const ctx =
       document.getElementById('revenueChart');

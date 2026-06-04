@@ -276,11 +276,11 @@ lowStockCount:0,
 
 });
 
-      this.db = firebase.firestore();
+this.db = firebase.firestore();
 
-      this.loadData();
+this.loadData();
 
-    },
+},
 
    loadData(){
 
@@ -295,7 +295,6 @@ lowStockCount:0,
     }));
 
     this.calculateStats();
-
     this.renderCharts();
 
   });
@@ -316,8 +315,7 @@ this.lowStockCount =
 this.products.filter(
   product => Number(product.stock || 0) <= 5
 ).length;
-
-this.renderCharts();
+    this.renderCharts();
 
   });
 
@@ -332,7 +330,6 @@ this.renderCharts();
   }));
 
   this.calculateStats();
-
   this.renderCharts();
 
 });
@@ -365,50 +362,35 @@ this.sales
 
 renderCharts(){
 
-  console.log("claimsChart",
-    document.getElementById("claimsChart"));
+  if(
+    !document.getElementById('claimsChart') ||
+    !document.getElementById('categoryChart') ||
+    !document.getElementById('revenueChart') ||
+    !document.getElementById('productsChart')
+  ){
+    return;
+  }
 
-  console.log("categoryChart",
-    document.getElementById("categoryChart"));
-
-  console.log("revenueChart",
-    document.getElementById("revenueChart"));
-
-  console.log("productsChart",
-    document.getElementById("productsChart"));
-
-  this.renderClaimsChart();
+   this.renderClaimsChart();
   this.renderCategoryChart();
   this.renderRevenueChart();
   this.renderProductsChart();
 
 },
     
-  renderClaimsChart(){
+renderClaimsChart(){
 
 const canvas =
 document.getElementById('claimsChart');
 
-if(!canvas){
-  console.log('claimsChart canvas not found');
-  return;
+if(!canvas) return;
+
+if(this.claimsChart){
+  this.claimsChart.destroy();
 }
 
-const ctx = canvas.getContext('2d');
-
-if(!ctx){
-  console.log('claimsChart context failed');
-  return;
-}
-    
-  if(!ctx) return;
-    
-  if(this.claimsChart){
-    this.claimsChart.destroy();
-  }
-
-  this.claimsChart = new Chart(canvas,{
-
+this.claimsChart = new Chart(canvas,{
+  
     type:'doughnut',
 
     data:{
@@ -428,6 +410,7 @@ if(!ctx){
     },
 
     options:{
+       animation:false,
       responsive:true,
       plugins:{
         legend:{
@@ -456,16 +439,16 @@ if(!ctx){
 
       });
 
-      const ctx =
+      const canvas =
       document.getElementById('categoryChart');
 
-      if(!ctx) return;
+      if(!canvas) return;
 
 if(this.categoryChart){
   this.categoryChart.destroy();
 }
 
-this.categoryChart = new Chart(ctx,{
+this.categoryChart = new Chart(canvas,{
   
         type:'pie',
 
@@ -484,6 +467,7 @@ this.categoryChart = new Chart(ctx,{
         },
 
         options:{
+           animation:false,
           responsive:true,
           plugins:{
             legend:{
@@ -515,16 +499,16 @@ renderRevenueChart(){
 
   });
 
-      const ctx =
+      const canvas =
       document.getElementById('revenueChart');
 
-  if(!ctx) return;
+  if(!canvas) return;
 
 if(this.revenueChart){
   this.revenueChart.destroy();
 }
 
-this.revenueChart = new Chart(ctx,{
+this.revenueChart = new Chart(canvas,{
   
         type:'line',
 
@@ -541,6 +525,7 @@ this.revenueChart = new Chart(ctx,{
         },
 
         options:{
+           animation:false,
           responsive:true,
           plugins:{
             legend:{
@@ -586,16 +571,16 @@ this.revenueChart = new Chart(ctx,{
       .sort((a,b)=>b[1]-a[1])
       .slice(0,7);
 
-      const ctx =
+      const canvas =
       document.getElementById('productsChart');
 
-      if(!ctx) return;
+      if(!canvas) return;
 
 if(this.productsChart){
   this.productsChart.destroy();
 }
 
-this.productsChart = new Chart(ctx,{
+this.productsChart = new Chart(canvas,{
   
         type:'bar',
 
@@ -609,6 +594,7 @@ this.productsChart = new Chart(ctx,{
         },
 
         options:{
+           animation:false,
           responsive:true,
           plugins:{
             legend:{
@@ -650,4 +636,4 @@ this.productsChart = new Chart(ctx,{
 </script>
 
 </body>
-</html>
+</html> 

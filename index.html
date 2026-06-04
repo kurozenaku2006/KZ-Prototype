@@ -232,6 +232,14 @@
       </button>
 
       <button
+  @click="openTrackingPanel()"
+  class="w-full glass p-4 rounded-2xl text-left hover:bg-white/10">
+
+  🚚 Track Order
+
+</button>
+
+      <button
         @click="openWishlistPanel()"
         class="w-full glass p-4 rounded-2xl text-left hover:bg-white/10">
 
@@ -421,6 +429,66 @@
 
   </div>
 
+  <!-- TRACKING MODAL -->
+
+<div
+x-show="trackingModal"
+x-transition.opacity
+class="fixed inset-0 bg-black/80 z-[90]"
+@click="trackingModal=false">
+</div>
+
+<div
+x-show="trackingModal"
+x-transition
+class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+
+<div
+@click.stop
+class="glass rounded-3xl p-6 w-full max-w-lg">
+
+<h2 class="text-3xl font-black mb-5">
+
+🚚 Track Order
+
+</h2>
+
+<input
+x-model="trackingId"
+placeholder="Enter Tracking ID"
+class="w-full glass rounded-2xl p-4 bg-transparent mb-4">
+
+<button
+@click="trackOrder()"
+class="w-full bg-cyan-500 py-4 rounded-2xl font-bold">
+
+TRACK
+
+</button>
+
+<div
+x-show="trackingResult"
+class="mt-6">
+
+<p>
+Product:
+<span x-text="trackingResult?.productName"></span>
+</p>
+
+<p class="mt-2">
+Status:
+<span
+class="text-cyan-300 font-bold"
+x-text="trackingResult?.status">
+</span>
+</p>
+
+</div>
+
+</div>
+
+</div>
+
   <!-- ADMIN LOGIN OVERLAY -->
 
   <div
@@ -514,6 +582,12 @@ function app(){
     pending:{},
 
     claimModal:false,
+
+    trackingModal:false,
+
+trackingId:'',
+
+trackingResult:null,
 
     selectedProduct:null,
 
@@ -625,37 +699,42 @@ function app(){
 
         const db = firebase.firestore();
 
-        await db.collection('claims').add({
+const trackingId =
+'KZ-' + Date.now();
 
-          productId:p.id,
+await db.collection('claims').add({
 
-          productName:p.name,
+  productId:p.id,
+  productName:p.name,
+  price:p.price,
 
-          price:p.price,
+  customerName:this.claimForm.name,
 
-          customerName:this.claimForm.name,
+  contact:this.claimForm.contact,
 
-          contact:this.claimForm.contact,
+  address:this.claimForm.address,
 
-          address:this.claimForm.address,
+  note:this.claimForm.note || '',
 
-          note:this.claimForm.note || '',
+  trackingId:trackingId,
 
-          status:'pending',
+  status:'pending',
 
-          createdAt:new Date(),
-          updatedAt:new Date()
+  createdAt:new Date(),
+  updatedAt:new Date()
 
-        });
+});
 
-        this.claimModal = false;
+alert(
+'Claim submitted successfully.\n\nTracking ID:\n' +
+trackingId
+);
 
-        this.claimLoading = false;
+this.claimModal = false;
 
-        this.pending[p.id] = false;
+this.claimLoading = false;
 
-        alert('Claim submitted successfully');
-
+this.pending[p.id] = false;
       }
 
       catch(error){
@@ -688,6 +767,52 @@ function app(){
 
     },
 
+    openTrackingPanel(){
+
+  this.menuOpen = false;
+
+  this.trackingModal = true;
+
+},
+
+    async trackOrder(){
+
+      this.trackingResult = null;
+
+  if(!this.trackingId){
+
+    alert('Enter Tracking ID');
+
+    return;
+
+  }
+
+  const db =
+  firebase.firestore();
+
+  const snapshot =
+  await db
+  .collection('claims')
+  .where(
+    'trackingId',
+    '==',
+    this.trackingId
+  )
+  .get();
+
+  if(snapshot.empty){
+
+    alert('Order not found');
+
+    return;
+
+  }
+
+  this.trackingResult =
+  snapshot.docs[0].data();
+
+},
+    
     adminLogin(){
 
       const correctPasscode =

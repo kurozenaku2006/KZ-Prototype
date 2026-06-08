@@ -153,11 +153,19 @@ productDoc.data();
             firebase.firestore.FieldValue.serverTimestamp()
           });
 
-          transaction.update(claimRef,{
-            status:newStatus,
-            updatedAt:
-            firebase.firestore.FieldValue.serverTimestamp()
-          });
+        transaction.update(claimRef,{
+
+  status:newStatus,
+
+  orderStatus:
+    newStatus === 'approved'
+      ? 'approved'
+      : firebase.firestore.FieldValue.delete(),
+
+  updatedAt:
+  firebase.firestore.FieldValue.serverTimestamp()
+
+});
 
         });
 
